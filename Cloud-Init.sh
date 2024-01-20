@@ -1,4 +1,4 @@
-VM_ID=201
+VM_ID=$0
 
 IMG_FILE_URL=https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img
 DOWNLOAD_FILE_PATH=/tmp/cloudimg-arm64.img

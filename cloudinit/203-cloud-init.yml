@@ -19,7 +19,7 @@ write_files:
       DEVICE=eth0
       ONBOOT=yes
       BOOTPROTO=none
-      IPADDR=192.168.11.201/24
+      IPADDR=192.168.11.203/24
       PREFIX=24
       GATEWAY=192.168.11.1
       DNS1=192.168.11.1

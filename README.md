@@ -2,8 +2,10 @@
 
 
 ```bash
-sudu su -
-wget https://raw.githubusercontent.com/kta/raspi-cluster-setup/main/Cloud-Init.sh -o create-vm.sh
-sh create-vm.sh
+sudo su -
+wget https://raw.githubusercontent.com/kta/raspi-cluster-setup/main/Cloud-Init.sh
+chmod +x Cloud-Init.sh
+./Cloud-Init.sh 201
+./Cloud-Init.sh 202
 ```
 
