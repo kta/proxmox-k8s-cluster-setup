@@ -14,7 +14,7 @@ if [ ! -e $DOWNLOAD_FILE_PATH ]; then
 fi
 
 # Download cloud config
-wget https://raw.githubusercontent.com/kta/pimox8/main/cloudinit/$VM_ID-cloud-init.yml -O $VM_ID-cloud-init.yml
+wget https://raw.githubusercontent.com/kta/raspi-cluster-setup/main/cloudinit/$VM_ID-cloud-init.yml -O $VM_ID-cloud-init.yml
 cp $VM_ID-cloud-init.yml /var/lib/vz/snippets/
 
 qm create $VM_ID \
