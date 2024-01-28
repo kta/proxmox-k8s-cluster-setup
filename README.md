@@ -5,8 +5,8 @@
 sudo su -
 rm deploy_vm.sh
 wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/deploy-vm.sh
-chmod +x deploy_vm.sh
-./deploy_vm.sh
+chmod +x deploy-vm.sh
+./deploy-vm.sh
 
 
 qm stop 201
