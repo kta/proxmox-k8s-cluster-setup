@@ -1,7 +1,8 @@
 IMG_FILE_URL=https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img
 DOWNLOAD_FILE_PATH=/tmp/cloudimg-arm64.img
 SNIPPET_TARGET_PATH=/var/lib/vz/snippets
-SSHKEY=https://github.com/kta.keys
+GITHUB_ACCOUNT=kta
+SSHKEY=https://github.com/${GITHUB_ACCOUNT}.keys
 
 VM_LIST=(
 	# ---
@@ -70,8 +71,12 @@ bootcmd:
   - ifup eth0
 runcmd:
   # set ssh_authorized_keys
-  - su - user -c "curl -sS https://github.com/kta.keys >> ~/.ssh/authorized_keys"
+  - su - user -c "curl -sS ${SSHKEY} >> ~/.ssh/authorized_keys"
   - su - user -c "chmod 600 ~/.ssh/authorized_keys"
+		# install kubernetes
+		# - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
+		# - su - user -c "chmod +x install-k8s.sh"
+		# - su - user -c "sudo bash install-k8s.sh"
 EOF
 
 		# create vm
@@ -86,6 +91,9 @@ EOF
 			--sata0 local:cloudinit \
 			--boot order=scsi0 \
 			--serial0 socket
+
+		# resize disk
+		qm resize "${vmid}" scsi0 100G
 
 		# set environment
 		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
