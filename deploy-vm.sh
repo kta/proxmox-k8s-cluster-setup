@@ -1,8 +1,12 @@
+# region : set variables
+
 IMG_FILE_URL=https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img
 DOWNLOAD_FILE_PATH=/tmp/cloudimg-arm64.img
 SNIPPET_TARGET_PATH=/var/lib/vz/snippets
+TEMPLATE_BOOT_IMAGE_TARGET_VOLUME=local
 GITHUB_ACCOUNT=kta
 SSHKEY=https://github.com/${GITHUB_ACCOUNT}.keys
+TEMPLATE_VMID=9900
 
 VM_LIST=(
 	# ---
@@ -14,12 +18,16 @@ VM_LIST=(
 	# targetip:   VMの配置先となるProxmoxホストのIP
 	# targethost: VMの配置先となるProxmoxホストのホスト名
 	# ---
-	#vmid #vmname     #cpu #mem  #vmsrvip       #gatewayip   #targetip     #targethost
+	#vmid #vmname    #cpu #mem  #vmsrvip       #gatewayip   #targetip      #targethost
 	"201 pve-vm-cp-1 2    2048  192.168.11.201 192.168.11.1 192.168.11.101 prox-node1"
 	"211 pve-vm-wk-1 2    2048  192.168.11.211 192.168.11.1 192.168.11.101 prox-node1"
 	"202 pve-vm-cp-2 2    2048  192.168.11.202 192.168.11.1 192.168.11.102 prox-node2"
 	"212 pve-vm-wk-2 2    2048  192.168.11.212 192.168.11.1 192.168.11.102 prox-node2"
 )
+
+# endregion
+
+# region : preparing for vm creation
 
 if !(type cloud-init > /dev/null 2>&1); then
 	apt install cloud-init
@@ -29,6 +37,35 @@ fi
 if [ ! -e $DOWNLOAD_FILE_PATH ]; then
 	curl $IMG_FILE_URL >$DOWNLOAD_FILE_PATH
 fi
+
+# endregion
+
+# region : create template
+
+
+# region : create template-vm
+
+# create a new VM and attach Network Adaptor
+# vmbr0=Service Network Segment (172.16.0.0/20)
+
+STORAGE=cephfs
+
+qm create ${TEMPLATE_VMID} \
+--cores 2 \
+--memory 2048 \
+--scsihw virtio-scsi-single \
+--bios ovmf \
+--efidisk0 ${STORAGE}:0,efitype=4m,pre-enrolled-keys=1,size=64M \
+--scsi0 ${STORAGE}:0,import-from=$DOWNLOAD_FILE_PATH \
+--sata0 ${STORAGE}:cloudinit \
+--boot order=scsi0 \
+--serial0 socket
+
+qm template $TEMPLATE_VMID
+
+# endregion
+
+# region : main
 
 for array in "${VM_LIST[@]}"; do
 	echo "${array}" | while read -r vmid vmname cpu mem vmsrvip gatewayip targetip targethost; do
@@ -73,27 +110,23 @@ runcmd:
   # set ssh_authorized_keys
   - su - user -c "curl -sS ${SSHKEY} >> ~/.ssh/authorized_keys"
   - su - user -c "chmod 600 ~/.ssh/authorized_keys"
-		# install kubernetes
-		# - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
-		# - su - user -c "chmod +x install-k8s.sh"
-		# - su - user -c "sudo bash install-k8s.sh"
+  # install kubernetes
+	# - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
+	# - su - user -c "chmod +x install-k8s.sh"
+	# - su - user -c "sudo bash install-k8s.sh"
 EOF
 
-		# create vm
-		qm create ${vmid} \
-			--cpulimit ${cpu} \
-			--memory ${mem} \
-			--net0 virtio,bridge=vmbr0 \
-			--scsihw virtio-scsi-single \
-			--bios ovmf \
-			--efidisk0 local:0,efitype=4m,pre-enrolled-keys=1,size=64M \
-			--scsi0 local:0,import-from=$DOWNLOAD_FILE_PATH \
-			--sata0 local:cloudinit \
-			--boot order=scsi0 \
-			--serial0 socket
 
-		# resize disk
-		qm resize "${vmid}" scsi0 100G
+		# create vm
+    qm clone "${TEMPLATE_VMID}" "${vmid}" \
+      --name "${vmname}" \
+      --full true \
+      --target "${targethost}"
+
+    ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
+    ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+    ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
+
 
 		# set environment
 		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
@@ -102,3 +135,5 @@ EOF
 		qm start ${vmid}
 	done
 done
+
+# endregion

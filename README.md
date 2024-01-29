@@ -18,10 +18,10 @@ qm stop 211
 qm stop 202
 qm stop 212
 
-qm destory 201
-qm destory 211
-qm destory 202
-qm destory 212
+qm destroy 201
+qm destroy 211
+qm destroy 202
+qm destroy 212
 ```
 
 
