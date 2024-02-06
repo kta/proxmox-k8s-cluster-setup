@@ -36,7 +36,7 @@ qm resize 212 scsi0 100G
 ```bash
 
 sudo su -
-wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/kubeadm/install_k8s.sh
-chmod +x install-k8s.sh
-./install-k8s.sh
+wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/install_k8s.sh
+chmod +x ./install_k8s.sh
+./install_k8s.sh
 ```
