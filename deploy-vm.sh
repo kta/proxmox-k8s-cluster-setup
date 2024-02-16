@@ -30,7 +30,7 @@ VM_LIST=(
 # region : preparing for vm creation
 
 if !(type cloud-init > /dev/null 2>&1); then
-	apt install cloud-init
+	apt install cloud-init -y
 fi
 
 # Download image
@@ -42,7 +42,6 @@ fi
 
 # region : create template
 
-
 # region : create template-vm
 
 # create a new VM and attach Network Adaptor
@@ -51,15 +50,15 @@ fi
 STORAGE=cephfs
 
 qm create ${TEMPLATE_VMID} \
---cores 2 \
---memory 2048 \
---scsihw virtio-scsi-single \
---bios ovmf \
---efidisk0 ${STORAGE}:0,efitype=4m,pre-enrolled-keys=1,size=64M \
---scsi0 ${STORAGE}:0,import-from=$DOWNLOAD_FILE_PATH \
---sata0 ${STORAGE}:cloudinit \
---boot order=scsi0 \
---serial0 socket
+	--cores 2 \
+	--memory 2048 \
+	--scsihw virtio-scsi-single \
+	--bios ovmf \
+	--efidisk0 ${STORAGE}:0,efitype=4m,pre-enrolled-keys=1,size=64M \
+	--scsi0 ${STORAGE}:0,import-from=$DOWNLOAD_FILE_PATH \
+	--sata0 ${STORAGE}:cloudinit \
+	--boot order=scsi0 \
+	--serial0 socket
 
 qm template $TEMPLATE_VMID
 
@@ -116,17 +115,15 @@ runcmd:
 	# - su - user -c "sudo bash install-k8s.sh"
 EOF
 
-
 		# create vm
-    qm clone "${TEMPLATE_VMID}" "${vmid}" \
-      --name "${vmname}" \
-      --full true \
-      --target "${targethost}"
+		qm clone "${TEMPLATE_VMID}" "${vmid}" \
+			--name "${vmname}" \
+			--full true \
+			--target "${targethost}"
 
-    ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
-    ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
-    ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
-
+		ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
+		ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
 
 		# set environment
 		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
