@@ -8,6 +8,8 @@ tee -a /etc/hosts <<EOS
 192.168.11.211 pve-vm-wk-1
 192.168.11.202 pve-vm-cp-2
 192.168.11.212 pve-vm-wk-2
+192.168.11.203 pve-vm-cp-3
+192.168.11.213 pve-vm-wk-3
 EOS
 
 # disable swap
