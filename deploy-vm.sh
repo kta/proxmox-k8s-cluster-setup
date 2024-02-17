@@ -19,12 +19,12 @@ VM_LIST=(
 	# targethost: VMの配置先となるProxmoxホストのホスト名
 	# ---
 	#vmid #vmname    #cpu #mem  #vmsrvip       #gatewayip   #targetip      #targethost
-	"201 pve-vm-cp-1 2    2048  192.168.11.201 192.168.11.1 192.168.11.101 prox-node1"
-	"211 pve-vm-wk-1 2    2048  192.168.11.211 192.168.11.1 192.168.11.101 prox-node1"
-	"202 pve-vm-cp-2 2    2048  192.168.11.202 192.168.11.1 192.168.11.102 prox-node2"
-	"212 pve-vm-wk-2 2    2048  192.168.11.212 192.168.11.1 192.168.11.102 prox-node2"
-	"203 pve-vm-cp-3 2    2048  192.168.11.203 192.168.11.1 192.168.11.103 prox-node3"
-	"213 pve-vm-wk-3 2    2048  192.168.11.213 192.168.11.1 192.168.11.103 prox-node3"
+	"201 pve-vm-cp-1 2    4094  192.168.11.201 192.168.11.1 192.168.11.101 pve-node1"
+	"211 pve-vm-wk-1 2    4094  192.168.11.211 192.168.11.1 192.168.11.101 pve-node1"
+	"202 pve-vm-cp-2 2    4094  192.168.11.202 192.168.11.1 192.168.11.102 pve-node2"
+	"212 pve-vm-wk-2 2    4094  192.168.11.212 192.168.11.1 192.168.11.102 pve-node2"
+	"203 pve-vm-cp-3 2    4094  192.168.11.203 192.168.11.1 192.168.11.103 pve-node3"
+	"213 pve-vm-wk-3 2    4094  192.168.11.213 192.168.11.1 192.168.11.103 pve-node3"
 )
 
 # endregion
@@ -49,7 +49,7 @@ fi
 # create a new VM and attach Network Adaptor
 # vmbr0=Service Network Segment (172.16.0.0/20)
 
-STORAGE=cephfs
+STORAGE=cephfs_01
 
 qm create ${TEMPLATE_VMID} \
 	--cores 2 \
@@ -112,16 +112,13 @@ runcmd:
   - su - user -c "curl -sS ${SSHKEY} >> ~/.ssh/authorized_keys"
   - su - user -c "chmod 600 ~/.ssh/authorized_keys"
   # install kubernetes
-	# - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
-	# - su - user -c "chmod +x install-k8s.sh"
-	# - su - user -c "sudo bash install-k8s.sh"
+  # - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
+  # - su - user -c "chmod +x install-k8s.sh"
+  # - su - user -c "sudo bash install-k8s.sh"
 EOF
 
 		# create vm
-		qm clone "${TEMPLATE_VMID}" "${vmid}" \
-			--name "${vmname}" \
-			--full true \
-			--target "${targethost}"
+		qm clone "${TEMPLATE_VMID}" "${vmid}"  --name "${vmname}" --full true  --target "${targethost}"
 
 		ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
 		ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
