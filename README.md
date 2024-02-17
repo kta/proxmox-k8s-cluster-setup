@@ -22,6 +22,8 @@ qm destroy 201
 qm destroy 211
 qm destroy 202
 qm destroy 212
+qm destroy 203
+qm destroy 213
 ```
 
 

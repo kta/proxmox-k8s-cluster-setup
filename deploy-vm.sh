@@ -71,9 +71,11 @@ qm template $TEMPLATE_VMID
 for array in "${VM_LIST[@]}"; do
 	echo "${array}" | while read -r vmid vmname cpu mem vmsrvip gatewayip targetip targethost; do
 
+		CLOUD_CONFIG_FILE_NAME=${SNIPPET_TARGET_PATH}/${vmid}-cloud-init.yaml
+
 		echo "----------- ${vmid} ------------"
 		# export cloud-config
-		cat >"${SNIPPET_TARGET_PATH}/${vmid}-cloud-init.yaml" <<EOF
+		cat >"${CLOUD_CONFIG_FILE_NAME}" <<EOF
 #cloud-config
 hostname: ${vmname}
 manage_etc_hosts: true
@@ -117,18 +119,20 @@ runcmd:
   # - su - user -c "sudo bash install-k8s.sh"
 EOF
 
-		# create vm
-		qm clone "${TEMPLATE_VMID}" "${vmid}"  --name "${vmname}" --full true  --target "${targethost}"
+		scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
 
-		ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
-		ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
-		ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
+		# create vm
+		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --target "${targethost}"
+
+		ssh -n ${targetip} qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
+		ssh -n ${targetip} qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		ssh -n ${targetip} qm resize "${vmid}" scsi0 100G
 
 		# set environment
-		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
-		qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
-		qm cloudinit dump ${vmid} user
-		qm start ${vmid}
+		ssh -n ${targetip} qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
+		ssh -n ${targetip} qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
+		ssh -n ${targetip} qm cloudinit dump ${vmid} user
+		ssh -n ${targetip} qm start ${vmid}
 	done
 done
 
