@@ -49,7 +49,7 @@ fi
 # create a new VM and attach Network Adaptor
 # vmbr0=Service Network Segment (172.16.0.0/20)
 
-STORAGE=cephfs_01
+STORAGE=local
 
 qm create ${TEMPLATE_VMID} \
 	--cores 2 \
