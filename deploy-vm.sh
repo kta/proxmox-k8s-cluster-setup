@@ -86,7 +86,7 @@ chpasswd: {expire: False}
 ssh_pwauth: true
 package_upgrade: true
 package_reboot_if_required: true
-locale: ja_JP.UTF-8
+locale: en_US.UTF-8
 timezone: Asia/Tokyo
 ssh_authorized_keys: []
 write_files:
