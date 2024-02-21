@@ -60,6 +60,7 @@ qm create ${TEMPLATE_VMID} \
 	--scsi0 ${STORAGE}:0,import-from=$DOWNLOAD_FILE_PATH \
 	--sata0 ${STORAGE}:cloudinit \
 	--boot order=scsi0 \
+	--net0 virtio,bridge=vmbr0
 	--serial0 socket
 
 qm template $TEMPLATE_VMID
@@ -96,8 +97,8 @@ write_files:
       TYPE=Ethernet
       DEVICE=eth0
       ONBOOT=yes
-      BOOTPROTO=none
-      IPADDR=${vmsrvip}/24
+      BOOTPROTO=static
+      IPADDR=${vmsrvip}
       PREFIX=24
       GATEWAY=${gatewayip}
       DNS1=${gatewayip}
@@ -119,7 +120,7 @@ runcmd:
   # - su - user -c "sudo bash install-k8s.sh"
 EOF
 
-		scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
+		# scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
 
 		# create vm
 		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --target "${targethost}"
@@ -137,3 +138,5 @@ EOF
 done
 
 # endregion
+
+qm destroy ${TEMPLATE_VMID}
