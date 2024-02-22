@@ -1,3 +1,12 @@
+#!/usr/bin/env bash
+set -eu
+
+
+# pve-vm-cp-3
+KUBE_API_SERVER_VIP="192.168.11.200"
+EXTERNAL_KUBE_API_SERVER="pve-vm-cp-3"
+
+
 # apt update and upgrade
 apt update
 apt upgrade -y
@@ -96,8 +105,9 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 
 # Ends except first-control-plane
 case $1 in
-pve-vm-cp-1) ;;
-pve-vm-cp-2 | pve-vm-cp-3)
+pve-vm-cp-3) 
+  ;;
+pve-vm-cp-2 | pve-vm-cp-1)
 	exit 0
 	;;
 *)
@@ -105,46 +115,45 @@ pve-vm-cp-2 | pve-vm-cp-3)
 	;;
 esac
 
-# # region : setup for first-control-plane node
-#
-# # Set kubeadm bootstrap token using openssl
-# KUBEADM_BOOTSTRAP_TOKEN=$(openssl rand -hex 3).$(openssl rand -hex 8)
-#
-# # Set init configuration for the first control plane
-# cat > "$HOME"/init_kubeadm.yaml <<EOF
-# apiVersion: kubeadm.k8s.io/v1beta3
-# kind: InitConfiguration
-# bootstrapTokens:
-# - token: "$KUBEADM_BOOTSTRAP_TOKEN"
-#   description: "kubeadm bootstrap token"
-#   ttl: "24h"
-# nodeRegistration:
-#   criSocket: "unix:///var/run/containerd/containerd.sock"
-# ---
-# apiVersion: kubeadm.k8s.io/v1beta3
-# kind: ClusterConfiguration
-# networking:
-#   serviceSubnet: "10.96.0.0/16"
-#   podSubnet: "10.128.0.0/16"
-# kubernetesVersion: "v1.27.1"
-# controlPlaneEndpoint: "${KUBE_API_SERVER_VIP}:8443"
-# apiServer:
-#   certSANs:
-#   - "${EXTERNAL_KUBE_API_SERVER}" # generate random FQDN to prevent malicious DoS attack
-# controllerManager:
-#   extraArgs:
-#     bind-address: "0.0.0.0"
-# scheduler:
-#   extraArgs:
-#     bind-address: "0.0.0.0"
-# ---
-# apiVersion: kubelet.config.k8s.io/v1beta1
-# kind: KubeletConfiguration
-# cgroupDriver: "systemd"
-# protectKernelDefaults: true
-# EOF
-#
-#
+# region : setup for first-control-plane node
+
+# Set init configuration for the first control plane
+KUBEADM_BOOTSTRAP_TOKEN=$(openssl rand -hex 3).$(openssl rand -hex 8)
+
+cat > "$HOME"/init_kubeadm.yaml <<EOF
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+bootstrapTokens:
+- token: "$KUBEADM_BOOTSTRAP_TOKEN"
+  description: "kubeadm bootstrap token"
+  ttl: "24h"
+nodeRegistration:
+  criSocket: "unix:///var/run/containerd/containerd.sock"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+networking:
+  serviceSubnet: "10.96.0.0/16"
+  podSubnet: "10.128.0.0/16"
+kubernetesVersion: "v1.29.2"
+controlPlaneEndpoint: "${KUBE_API_SERVER_VIP}:8443"
+apiServer:
+  certSANs:
+  - "${EXTERNAL_KUBE_API_SERVER}" # generate random FQDN to prevent malicious DoS attack
+controllerManager:
+  extraArgs:
+    bind-address: "0.0.0.0"
+scheduler:
+  extraArgs:
+    bind-address: "0.0.0.0"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: "systemd"
+protectKernelDefaults: true
+EOF
+
+
 # # kubernetesの設定
 # mkdir -p $HOME/.kube
 # cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -159,7 +168,9 @@ esac
 # # kubernetesのノード確認
 # kubectl get nodes
 
-kubeadm init --pod-network-cidr=10.244.0.0/16 --control-plane-endpoint=pve-vm-cp-1 --apiserver-cert-extra-sans=pve-vm-cp-1
+# kubeadm init --pod-network-cidr=10.244.0.0/16 --control-plane-endpoint=pve-vm-cp-1 --apiserver-cert-extra-sans=pve-vm-cp-1
+kubeadm init --config "$HOME"/init_kubeadm.yaml --skip-phases=addon/kube-proxy --ignore-preflight-errors=NumCPU,Mem
+
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -228,6 +239,7 @@ EOF
 sudo apt-get install -y ansible git sshpass
 
 # clone repo
+TARGET_BRANCH="main"
 git clone -b "${TARGET_BRANCH}" https://github.com/kta/proxmox-k8s-cluster-setup "$HOME"/kube-cluster-on-proxmox
 
 # export ansible.cfg target

@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+set -eu
+
 # region : set variables
 
 IMG_FILE_URL=https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img
