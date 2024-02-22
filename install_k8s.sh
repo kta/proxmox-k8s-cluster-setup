@@ -4,7 +4,7 @@ set -eu
 # pve-vm-cp-3
 KUBE_API_SERVER_VIP="192.168.11.200"
 EXTERNAL_KUBE_API_SERVER_NAME="pve-vm-cp-3"
-EXTERNAL_KUBE_API_SERVER_IP=
+EXTERNAL_KUBE_API_SERVER_IP="192.168.11.203"
 
 # update時にインタラクティブに対応しない
 config_file="/etc/needrestart/needrestart.conf"
@@ -107,15 +107,16 @@ EOF
 # install flannel
 
 # Ends except first-control-plane
-case $1 in
-pve-vm-cp-3) ;;
-pve-vm-cp-2 | pve-vm-cp-1)
-	exit 0
-	;;
-*)
-	exit 1
-	;;
-esac
+# case $1 in
+# pve-vm-cp-3) 
+# ;;
+# pve-vm-cp-2 | pve-vm-cp-1)
+# 	exit 0
+# 	;;
+# *)
+# 	exit 1
+# 	;;
+# esac
 
 # region : setup for first-control-plane node
 
@@ -236,18 +237,18 @@ discovery:
     unsafeSkipCAVerification: true
 EOF
 
-# install ansible
-sudo apt-get install -y ansible git sshpass
+# # install ansible
+# sudo apt-get install -y ansible git sshpass
 
-# clone repo
-TARGET_BRANCH="main"
-git clone -b "${TARGET_BRANCH}" https://github.com/kta/proxmox-k8s-cluster-setup "$HOME"/kube-cluster-on-proxmox
+# # clone repo
+# TARGET_BRANCH="main"
+# git clone -b "${TARGET_BRANCH}" https://github.com/kta/proxmox-k8s-cluster-setup "$HOME"/kube-cluster-on-proxmox
 
-# export ansible.cfg target
-REPOSITORY_NAME=proxmox-k8s-cluster-setup
-ANSIBLE_CONFIG="$HOME"/${REPOSITORY_NAME}/ansible/ansible.cfg
+# # export ansible.cfg target
+# REPOSITORY_NAME=proxmox-k8s-cluster-setup
+# ANSIBLE_CONFIG="$HOME"/${REPOSITORY_NAME}/ansible/ansible.cfg
 
-# run ansible-playbook
-ansible-galaxy role install -r "$HOME"/${REPOSITORY_NAME}/ansible/roles/requirements.yaml
-ansible-galaxy collection install -r "$HOME"/${REPOSITORY_NAME}/ansible/roles/requirements.yaml
-ansible-playbook -i "$HOME"/${REPOSITORY_NAME}/ansible/hosts/k8s-servers/inventory "$HOME"/${REPOSITORY_NAME}/ansible/site.yaml
+# # run ansible-playbook
+# ansible-galaxy role install -r "$HOME"/${REPOSITORY_NAME}/ansible/roles/requirements.yaml
+# ansible-galaxy collection install -r "$HOME"/${REPOSITORY_NAME}/ansible/roles/requirements.yaml
+# ansible-playbook -i "$HOME"/${REPOSITORY_NAME}/ansible/hosts/k8s-servers/inventory "$HOME"/${REPOSITORY_NAME}/ansible/site.yaml
