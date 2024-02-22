@@ -107,16 +107,15 @@ EOF
 # install flannel
 
 # Ends except first-control-plane
-# case $1 in
-# pve-vm-cp-3) 
-# ;;
-# pve-vm-cp-2 | pve-vm-cp-1)
-# 	exit 0
-# 	;;
-# *)
-# 	exit 1
-# 	;;
-# esac
+case $1 in
+pve-vm-cp-3) ;;
+pve-vm-cp-2 | pve-vm-cp-1)
+	exit 0
+	;;
+*)
+	exit 1
+	;;
+esac
 
 # region : setup for first-control-plane node
 
