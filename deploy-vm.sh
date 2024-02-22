@@ -65,7 +65,7 @@ qm create ${TEMPLATE_VMID} \
 	--sata0 ${STORAGE}:cloudinit \
 	--boot order=scsi0 \
 	--net0 virtio,bridge=vmbr0
-	--serial0 socket
+--serial0 socket
 
 qm template $TEMPLATE_VMID
 

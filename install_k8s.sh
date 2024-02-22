@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 set -eu
 
-
 # pve-vm-cp-3
 KUBE_API_SERVER_VIP="192.168.11.200"
-EXTERNAL_KUBE_API_SERVER="pve-vm-cp-3"
+EXTERNAL_KUBE_API_SERVER_NAME="pve-vm-cp-3"
+EXTERNAL_KUBE_API_SERVER_IP=
 
+# update時にインタラクティブに対応しない
+config_file="/etc/needrestart/needrestart.conf"
+new_value="'a'"
+sed -i "s/^#\$nrconf{restart} = 'i';/\$nrconf{restart} = $new_value;/" "$config_file"
 
 # apt update and upgrade
 apt update
@@ -101,12 +105,10 @@ timeout: 10
 EOF
 
 # install flannel
-kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 
 # Ends except first-control-plane
 case $1 in
-pve-vm-cp-3) 
-  ;;
+pve-vm-cp-3) ;;
 pve-vm-cp-2 | pve-vm-cp-1)
 	exit 0
 	;;
@@ -120,7 +122,7 @@ esac
 # Set init configuration for the first control plane
 KUBEADM_BOOTSTRAP_TOKEN=$(openssl rand -hex 3).$(openssl rand -hex 8)
 
-cat > "$HOME"/init_kubeadm.yaml <<EOF
+cat >"$HOME"/init_kubeadm.yaml <<EOF
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 bootstrapTokens:
@@ -139,7 +141,8 @@ kubernetesVersion: "v1.29.2"
 controlPlaneEndpoint: "${KUBE_API_SERVER_VIP}:8443"
 apiServer:
   certSANs:
-  - "${EXTERNAL_KUBE_API_SERVER}" # generate random FQDN to prevent malicious DoS attack
+  - "${EXTERNAL_KUBE_API_SERVER_NAME}" # generate random FQDN to prevent malicious DoS attack
+  - "${EXTERNAL_KUBE_API_SERVER_IP}" # generate random FQDN to prevent malicious DoS attack
 controllerManager:
   extraArgs:
     bind-address: "0.0.0.0"
@@ -152,7 +155,6 @@ kind: KubeletConfiguration
 cgroupDriver: "systemd"
 protectKernelDefaults: true
 EOF
-
 
 # # kubernetesの設定
 # mkdir -p $HOME/.kube
@@ -171,26 +173,25 @@ EOF
 # kubeadm init --pod-network-cidr=10.244.0.0/16 --control-plane-endpoint=pve-vm-cp-1 --apiserver-cert-extra-sans=pve-vm-cp-1
 kubeadm init --config "$HOME"/init_kubeadm.yaml --skip-phases=addon/kube-proxy --ignore-preflight-errors=NumCPU,Mem
 
-
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # ----------------- Helm -----------------
 
-# Install Helm
-# https://helm.sh/docs/intro/install/#from-apt-debianubuntu
-curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
-sudo apt-get install apt-transport-https --yes
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo apt-get update
-sudo apt-get install -y helm
+# # Install Helm
+# # https://helm.sh/docs/intro/install/#from-apt-debianubuntu
+# curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg >/dev/null
+# sudo apt install apt-transport-https --yes
+# echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+# sudo apt update
+# sudo apt install -y helm
 
-# Install MetalLB
-# https://metallb.universe.tf/installation/#installation-with-helm
-helm repo add metallb https://metallb.github.io/metallb
-kubectl create namespace metallb-system
-helm install metallb metallb/metallb -n metallb-system
+# # Install MetalLB
+# # https://metallb.universe.tf/installation/#installation-with-helm
+# helm repo add metallb https://metallb.github.io/metallb
+# kubectl create namespace metallb-system
+# helm install metallb metallb/metallb -n metallb-system
 
 # ----------------- Preparation for connecting k8s nodes -----------------
 
