@@ -127,17 +127,31 @@ EOF
 		# scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
 
 		# create vm
-		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --target "${targethost}"
+		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true
 
-		ssh -n ${targetip} qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
-		ssh -n ${targetip} qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
-		ssh -n ${targetip} qm resize "${vmid}" scsi0 100G
+		qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		qm resize "${vmid}" scsi0 100G
 
 		# set environment
-		ssh -n ${targetip} qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
-		ssh -n ${targetip} qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
-		ssh -n ${targetip} qm cloudinit dump ${vmid} user
-		ssh -n ${targetip} qm start ${vmid}
+		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
+		qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
+		qm cloudinit dump ${vmid} user
+		qm start ${vmid}
+
+		# # move disk version
+		#
+		# # create vm
+		# qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --target "${targethost}"
+		# 
+		# ssh -n ${targetip} qm move-disk "${vmid}" scsi0 "${BOOT_IMAGE_TARGET_VOLUME}" --delete true
+		# ssh -n ${targetip} qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		# ssh -n ${targetip} qm resize "${vmid}" scsi0 100G
+		#
+		# # set environment
+		# ssh -n ${targetip} qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
+		# ssh -n ${targetip} qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
+		# ssh -n ${targetip} qm cloudinit dump ${vmid} user
+		# ssh -n ${targetip} qm start ${vmid}
 	done
 done
 
