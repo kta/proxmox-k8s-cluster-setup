@@ -52,3 +52,20 @@ wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/
 chmod +x ./install_k8s.sh
 ./install_k8s.sh pve-vm-cp-1
 ```
+
+```
+qm stop 203
+qm destroy 203
+./deploy-vm.sh
+rm ~/.ssh/known_hosts
+ssh user@192.168.11.203
+
+
+
+
+sudo su -
+
+wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/install_k8s.sh
+chmod +x ./install_k8s.sh
+/install_k8s.sh pve-vm-cp-3
+```

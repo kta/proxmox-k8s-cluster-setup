@@ -64,7 +64,7 @@ qm create ${TEMPLATE_VMID} \
 	--scsi0 ${STORAGE}:0,import-from=$DOWNLOAD_FILE_PATH \
 	--sata0 ${STORAGE}:cloudinit \
 	--boot order=scsi0 \
-	--net0 virtio,bridge=vmbr0
+	--net0 virtio,bridge=vmbr0 \
 	--serial0 socket
 
 qm template $TEMPLATE_VMID

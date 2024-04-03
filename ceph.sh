@@ -1,9 +1,9 @@
 # cephのインストール
 # https://github.com/laowolf/pve-docs/blob/master/pveceph.adoc
 
-CEPH_CLUSTER_IP_1=192.168.11.101
-CEPH_CLUSTER_IP_2=192.168.11.102
-CEPH_CLUSTER_IP_3=192.168.11.103
+CEPH_CLUSTER_IP_1=192.168.100.101
+CEPH_CLUSTER_IP_2=192.168.100.102
+CEPH_CLUSTER_IP_3=192.168.100.103
 
 DEVICE_NAME=/dev/sda
 
@@ -19,7 +19,7 @@ dmsetup remove_all
 
 # ------------- メインサーバーのみ -------------------
 # Cephのインストール
-pveceph install --repository no-subscriptiopveceph install --repository no-subscriptionn
+pveceph install --repository no-subscription 
 
 pveceph init --network ${CEPH_CLUSTER_IP_1}/24
 
@@ -47,4 +47,8 @@ ceph osd crush tree --show-shadow
 # ------------- メインサーバー以外 -------------------
 # OSDの作成
 
-# pveceph osd create ${DEVICE_NAME}
+DEVICE_NAME=/dev/sda
+lsblk -f
+wipefs --force --all ${DEVICE_NAME}
+dmsetup remove_all
+pveceph osd create ${DEVICE_NAME}
