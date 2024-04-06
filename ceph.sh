@@ -38,11 +38,9 @@ pveceph mds create
 # pveceph fs create --pg_num 30 --add-storage
 
 # プールの作成
-# pveceph pool create cephfs_01
-# 動くかわからない
-pveceph pool create cephfs_01 --add_storages
+pveceph pool create cephpool --add_storages 1
 
-ceph osd crush tree --show-shadow
+# ceph osd crush tree --show-shadow
 
 # ------------- メインサーバー以外 -------------------
 # OSDの作成

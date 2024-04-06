@@ -11,6 +11,7 @@ TEMPLATE_BOOT_IMAGE_TARGET_VOLUME=local
 GITHUB_ACCOUNT=kta
 SSHKEY=https://github.com/${GITHUB_ACCOUNT}.keys
 TEMPLATE_VMID=9900
+CEPH_POOL=cephpool
 
 VM_LIST=(
 	# ---
@@ -65,7 +66,8 @@ qm create ${TEMPLATE_VMID} \
 	--sata0 ${STORAGE}:cloudinit \
 	--boot order=scsi0 \
 	--net0 virtio,bridge=vmbr0 \
-	--serial0 socket
+	--serial0 socket \
+	--storage "${CEPH_POOL}"
 
 qm template $TEMPLATE_VMID
 
@@ -127,7 +129,7 @@ EOF
 		# scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
 
 		# create vm
-		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true
+		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --storage "${CEPH_POOL}"
 
 		qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
 		qm resize "${vmid}" scsi0 100G
