@@ -19,8 +19,8 @@ apt upgrade -y
 
 # add hosts
 tee -a /etc/hosts <<EOS
-192.168.11.201 pve-vm-cp-4
-192.168.11.211 pve-vm-wk-4
+192.168.11.201 pve-vm-cp-1
+192.168.11.211 pve-vm-wk-1
 192.168.11.202 pve-vm-cp-2
 192.168.11.212 pve-vm-wk-2
 192.168.11.203 pve-vm-cp-3
