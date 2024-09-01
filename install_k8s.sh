@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -eu
 
-# pve-vm-cp-3
-KUBE_API_SERVER_VIP="192.168.11.203"
-EXTERNAL_KUBE_API_SERVER_NAME="pve-vm-cp-3"
-EXTERNAL_KUBE_API_SERVER_IP="192.168.11.203"
+# pve-vm-cp-1
+KUBE_API_SERVER_VIP="192.168.11.201"
+EXTERNAL_KUBE_API_SERVER_NAME="pve-vm-cp-1"
+EXTERNAL_KUBE_API_SERVER_IP="192.168.11.201"
 
 # update時にインタラクティブに対応しない
 config_file="/etc/needrestart/needrestart.conf"
@@ -110,9 +110,9 @@ EOF
 
 # Ends except first-control-plane
 case $1 in
-pve-vm-cp-3) 
+pve-vm-cp-1) 
   ;;
-pve-vm-cp-2 | pve-vm-cp-1)
+pve-vm-cp-2 | pve-vm-cp-3)
 	exit 0
 	;;
 *)
