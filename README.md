@@ -1,3 +1,20 @@
+# Flow
+
+1. create ceph
+2. create VM
+3. install k8s and initialize cluster for master node (at vm)
+3. install k8s and join cluster for other node (at vm)
+
+## install ceph
+
+```bash
+
+sudo su -
+wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/ceph.sh
+chmod +x ./ceph.sh
+./ceph.sh
+```
+
 # raspi-cluster-setup
 
 
@@ -32,15 +49,6 @@ qm resize 202 scsi0 100G
 qm resize 211 scsi0 100G
 qm resize 212 scsi0 100G
 
-## install ceph
-
-```bash
-
-sudo su -
-wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/ceph.sh
-chmod +x ./ceph.sh
-./ceph.sh
-```
 
 
 ## install k8s
