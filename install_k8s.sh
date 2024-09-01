@@ -2,9 +2,9 @@
 set -eu
 
 # pve-vm-cp-1
-KUBE_API_SERVER_VIP="192.168.11.201"
+KUBE_API_SERVER_VIP="192.168.100.201"
 EXTERNAL_KUBE_API_SERVER_NAME="pve-vm-cp-1"
-EXTERNAL_KUBE_API_SERVER_IP="192.168.11.201"
+EXTERNAL_KUBE_API_SERVER_IP="192.168.100.201"
 
 # update時にインタラクティブに対応しない
 config_file="/etc/needrestart/needrestart.conf"
@@ -19,12 +19,12 @@ apt upgrade -y
 
 # add hosts
 tee -a /etc/hosts <<EOS
-192.168.11.201 pve-vm-cp-1
-192.168.11.211 pve-vm-wk-1
-192.168.11.202 pve-vm-cp-2
-192.168.11.212 pve-vm-wk-2
-192.168.11.203 pve-vm-cp-3
-192.168.11.213 pve-vm-wk-3
+192.168.100.201 pve-vm-cp-1
+192.168.100.211 pve-vm-wk-1
+192.168.100.202 pve-vm-cp-2
+192.168.100.212 pve-vm-wk-2
+192.168.100.203 pve-vm-cp-3
+192.168.100.213 pve-vm-wk-3
 EOS
 
 # disable swap
