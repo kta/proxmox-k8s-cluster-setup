@@ -19,7 +19,7 @@ dmsetup remove_all
 
 # ------------- メインサーバーのみ -------------------
 # Cephのインストール
-pveceph install --repository no-subscription 
+pveceph install --repository no-subscription
 
 pveceph init --network ${CEPH_CLUSTER_IP_1}/24
 
