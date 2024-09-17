@@ -58,7 +58,7 @@ qm resize 212 scsi0 100G
 sudo su -
 wget --no-cache https://raw.githubusercontent.com/kta/proxmox-k8s-cluster-setup/main/install_k8s.sh
 chmod +x ./install_k8s.sh
-./install_k8s.sh $(hostname)
+./install_k8s.sh $(hostname) main
 ```
 
 ```
