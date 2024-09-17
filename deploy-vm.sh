@@ -11,7 +11,8 @@ TEMPLATE_BOOT_IMAGE_TARGET_VOLUME=local
 GITHUB_ACCOUNT=kta
 SSHKEY=https://github.com/${GITHUB_ACCOUNT}.keys
 TEMPLATE_VMID=9900
-CEPH_POOL=cephpool
+CEPH_POOL=local # or "cephpool",  if you wanna storage list, you should run this command: 'pvesm status'
+INSTALL_K8S_BRANCH_NAME=main
 
 VM_LIST=(
 	# ---
@@ -24,12 +25,12 @@ VM_LIST=(
 	# targethost: VMの配置先となるProxmoxホストのホスト名
 	# ---
 	#vmid #vmname    #cpu #mem  #vmsrvip       #gatewayip   #targetip      #targethost
-	"201 pve-vm-cp-1 2    4094  192.168.100.201 192.168.100.1 192.168.100.101 pve-node1"
-	"211 pve-vm-wk-1 2    4094  192.168.100.211 192.168.100.1 192.168.100.101 pve-node1"
-	"202 pve-vm-cp-2 2    4094  192.168.100.202 192.168.100.1 192.168.100.102 pve-node2"
-	"212 pve-vm-wk-2 2    4094  192.168.100.212 192.168.100.1 192.168.100.102 pve-node2"
-	"203 pve-vm-cp-3 2    4094  192.168.100.203 192.168.100.1 192.168.100.103 pve-node3"
-	"213 pve-vm-wk-3 2    4094  192.168.100.213 192.168.100.1 192.168.100.103 pve-node3"
+	"201 pve-vm-cp-1 2    3072  192.168.100.201 192.168.100.1 192.168.100.101 pve-node1"
+	"211 pve-vm-wk-1 2    3072  192.168.100.211 192.168.100.1 192.168.100.101 pve-node1"
+	"202 pve-vm-cp-2 2    3072  192.168.100.202 192.168.100.1 192.168.100.102 pve-node2"
+	"212 pve-vm-wk-2 2    3072  192.168.100.212 192.168.100.1 192.168.100.102 pve-node2"
+	"203 pve-vm-cp-3 2    3072  192.168.100.203 192.168.100.1 192.168.100.103 pve-node3"
+	"213 pve-vm-wk-3 2    3072  192.168.100.213 192.168.100.1 192.168.100.103 pve-node3"
 )
 
 # endregion
@@ -121,9 +122,9 @@ runcmd:
   - su - user -c "curl -sS ${SSHKEY} >> ~/.ssh/authorized_keys"
   - su - user -c "chmod 600 ~/.ssh/authorized_keys"
   # install kubernetes
-  # - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
-  # - su - user -c "chmod +x install-k8s.sh"
-  # - su - user -c "sudo bash install-k8s.sh"
+  - su - user -c "wget --no-cache https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/proxmox-k8s-cluster-setup/main/install_k8s.sh"
+  - su - user -c "chmod +x install-k8s.sh"
+  - su - user -c "./install-k8s.sh ${vmname} ${INSTALL_K8S_BRANCH_NAME}"
 EOF
 
 		# scp ${CLOUD_CONFIG_FILE_NAME} user@${targetip}:${CLOUD_CONFIG_FILE_NAME}
@@ -131,30 +132,20 @@ EOF
 		# create vm
 		qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --storage "${CEPH_POOL}"
 
-		qm migrate "${vmid}" "${targethost}"
-		# qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
-		# qm resize "${vmid}" scsi0 100G
+		qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		qm resize "${vmid}" scsi0 100G
+		qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
+		qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
+		qm cloudinit dump ${vmid} user
+		qm start ${vmid}
 
-		# # set environment
-		# qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
-		# qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
-		# qm cloudinit dump ${vmid} user
-		# qm start ${vmid}
-
-		# # move disk version
-		#
-		# # create vm
-		# qm clone "${TEMPLATE_VMID}" "${vmid}" --name "${vmname}" --full true --target "${targethost}"
-		# 
-		# ssh -n "${targetip}" qm move-disk "${vmid}" scsi0 "${TEMPLATE_BOOT_IMAGE_TARGET_VOLUME}" --delete true
-		ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
-		ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
-		
-		# set environment
-		ssh -n "${targetip}" qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
-		ssh -n "${targetip}" qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
-		ssh -n "${targetip}" qm cloudinit dump ${vmid} user
-		ssh -n "${targetip}" qm start ${vmid}
+		# qm migrate "${vmid}" "${targethost}"
+		# ssh -n "${targetip}" qm set "${vmid}" --cores "${cpu}" --memory "${mem}"
+		# ssh -n "${targetip}" qm resize "${vmid}" scsi0 100G
+		# ssh -n "${targetip}" qm set ${vmid} --ipconfig0 ip=${vmsrvip}/24,gw=${gatewayip}
+		# ssh -n "${targetip}" qm set ${vmid} --cicustom "user=local:snippets/${vmid}-cloud-init.yaml"
+		# ssh -n "${targetip}" qm cloudinit dump ${vmid} user
+		# ssh -n "${targetip}" qm start ${vmid}
 	done
 done
 
